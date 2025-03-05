@@ -81,7 +81,7 @@ export class Zero {
 		})
 	}
 
-	dispose() {
+	close() {
 		clearTimeout(this.timeout)
 		if (this.pendingUpdates.length) {
 			this.sendPendingUpdates()
