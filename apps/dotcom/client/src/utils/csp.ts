@@ -23,6 +23,8 @@ export const cspDirectives: { [key: string]: string[] } = {
 		'https://zero.tldraw.com',
 		'http://localhost:4848',
 		'https://analytics.tldraw.com',
+		'https://stats.g.doubleclick.net',
+		'https://*.google-analytics.com',
 	],
 	'font-src': [`'self'`, `https://fonts.googleapis.com`, `https://fonts.gstatic.com`, 'data:'],
 	'frame-src': [`https:`],
