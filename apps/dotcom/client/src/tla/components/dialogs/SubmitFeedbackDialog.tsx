@@ -27,10 +27,10 @@ const messages = defineMessages({
 
 const descriptionKey = 'tldraw-feedback-description'
 
-export function SubmitFeedbackDialog() {
+export function SubmitFeedbackDialog({ onClose }: { onClose(): void }) {
 	const isSignedIn = useAuth().isSignedIn
 	if (isSignedIn) {
-		return <SignedInSubmitFeedbackDialog />
+		return <SignedInSubmitFeedbackDialog onClose={onClose} />
 	}
 	return <SignedOutSubmitFeedbackDialog />
 }
@@ -66,7 +66,7 @@ function SignedOutSubmitFeedbackDialog() {
 	)
 }
 
-function SignedInSubmitFeedbackDialog() {
+function SignedInSubmitFeedbackDialog({ onClose }: { onClose(): void }) {
 	const rInput = useRef<HTMLTextAreaElement>(null)
 	const toasts = useToasts()
 	const intl = useIntl()
@@ -77,6 +77,7 @@ function SignedInSubmitFeedbackDialog() {
 			body: JSON.stringify({
 				allowContact: true,
 				description: rInput.current.value.trim(),
+				url: window.location.href,
 			} satisfies SubmitFeedbackRequestBody),
 		})
 			.then((r) => {
@@ -92,12 +93,13 @@ function SignedInSubmitFeedbackDialog() {
 				})
 			})
 		deleteFromLocalStorage(descriptionKey)
+		onClose()
 		toasts.addToast({
 			severity: 'success',
 			title: intl.formatMessage(messages.submitted),
 			description: intl.formatMessage(messages.thanks),
 		})
-	}, [intl, toasts])
+	}, [intl, onClose, toasts])
 
 	// Focus the input when the dialog opens, select all text
 	useEffect(() => {
@@ -109,7 +111,7 @@ function SignedInSubmitFeedbackDialog() {
 	}, [])
 
 	return (
-		<div className={styles.feedbackDialog}>
+		<>
 			<TldrawUiDialogHeader>
 				<TldrawUiDialogTitle>
 					<F defaultMessage="Send feedback" />
@@ -147,7 +149,7 @@ function SignedInSubmitFeedbackDialog() {
 				/>
 			</TldrawUiDialogBody>
 			<TldrawUiDialogFooter className="tlui-dialog__footer__actions">
-				<TldrawUiButton type="normal">
+				<TldrawUiButton type="normal" onClick={onClose}>
 					<TldrawUiButtonLabel>
 						<F defaultMessage="Cancel" />
 					</TldrawUiButtonLabel>
@@ -158,6 +160,6 @@ function SignedInSubmitFeedbackDialog() {
 					</TldrawUiButtonLabel>
 				</TldrawUiButton>
 			</TldrawUiDialogFooter>
-		</div>
+		</>
 	)
 }
