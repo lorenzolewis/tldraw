@@ -114,14 +114,6 @@ export class Arc2d extends Geometry2d {
         sweepFlag: number;
     });
     // (undocumented)
-    angleEnd: number;
-    // (undocumented)
-    angleStart: number;
-    // (undocumented)
-    _center: Vec;
-    // (undocumented)
-    end: Vec;
-    // (undocumented)
     getLength(): number;
     // (undocumented)
     getSvgPathData(first?: boolean): string;
@@ -130,17 +122,7 @@ export class Arc2d extends Geometry2d {
     // (undocumented)
     hitTestLineSegment(A: VecLike, B: VecLike): boolean;
     // (undocumented)
-    largeArcFlag: number;
-    // (undocumented)
-    measure: number;
-    // (undocumented)
     nearestPoint(point: VecLike): Vec;
-    // (undocumented)
-    radius: number;
-    // (undocumented)
-    start: Vec;
-    // (undocumented)
-    sweepFlag: number;
 }
 
 // @public
@@ -194,6 +176,7 @@ export interface BindingOnDeleteOptions<Binding extends TLUnknownBinding> {
 // @public
 export interface BindingOnShapeChangeOptions<Binding extends TLUnknownBinding> {
     binding: Binding;
+    reason: 'ancestry' | 'self';
     shapeAfter: TLShape;
     shapeBefore: TLShape;
 }
@@ -434,8 +417,6 @@ export class Circle2d extends Geometry2d {
         y?: number;
     });
     // (undocumented)
-    _center: Vec;
-    // (undocumented)
     config: Omit<Geometry2dOptions, 'isClosed'> & {
         isFilled: boolean;
         radius: number;
@@ -452,12 +433,6 @@ export class Circle2d extends Geometry2d {
     hitTestLineSegment(A: VecLike, B: VecLike, distance?: number): boolean;
     // (undocumented)
     nearestPoint(point: VecLike): Vec;
-    // (undocumented)
-    radius: number;
-    // (undocumented)
-    x: number;
-    // (undocumented)
-    y: number;
 }
 
 // @public
@@ -535,23 +510,13 @@ export class CubicBezier2d extends Polyline2d {
         start: Vec;
     });
     // (undocumented)
-    a: Vec;
-    // (undocumented)
-    b: Vec;
-    // (undocumented)
-    c: Vec;
-    // (undocumented)
-    d: Vec;
-    // (undocumented)
     static GetAtT(segment: CubicBezier2d, t: number): Vec;
     // (undocumented)
-    getLength(filters?: Geometry2dFilters, precision?: number): number;
+    getLength(_filters?: Geometry2dFilters, precision?: number): number;
     // (undocumented)
     getSvgPathData(first?: boolean): string;
     // (undocumented)
     getVertices(): Vec[];
-    // (undocumented)
-    midPoint(): Vec;
     // (undocumented)
     nearestPoint(A: VecLike): Vec;
 }
@@ -572,11 +537,7 @@ export class CubicSpline2d extends Geometry2d {
     // (undocumented)
     nearestPoint(A: VecLike): Vec;
     // (undocumented)
-    points: Vec[];
-    // (undocumented)
     get segments(): CubicBezier2d[];
-    // (undocumented)
-    _segments?: CubicBezier2d[];
 }
 
 // @public (undocumented)
@@ -799,27 +760,13 @@ export class Edge2d extends Geometry2d {
         start: Vec;
     });
     // (undocumented)
-    d: Vec;
-    // (undocumented)
-    end: Vec;
-    // (undocumented)
     getLength(): number;
     // (undocumented)
     getSvgPathData(first?: boolean): string;
     // (undocumented)
     getVertices(): Vec[];
     // (undocumented)
-    hitTestLineSegment(A: VecLike, B: VecLike, distance?: number): boolean;
-    // (undocumented)
-    midPoint(): Vec;
-    // (undocumented)
     nearestPoint(point: VecLike): Vec;
-    // (undocumented)
-    start: Vec;
-    // (undocumented)
-    u: Vec;
-    // (undocumented)
-    ul: number;
 }
 
 // @public (undocumented)
@@ -1261,6 +1208,7 @@ export class Editor extends EventEmitter<TLEventMap> {
     // @internal
     getMarkIdMatching(idSubstring: string): null | string;
     getNearestAdjacentShape(currentShapeId: TLShapeId, direction: 'down' | 'left' | 'right' | 'up'): TLShapeId;
+    getNotVisibleShapes(): Set<TLShapeId>;
     getOnlySelectedShape(): null | TLShape;
     getOnlySelectedShapeId(): null | TLShapeId;
     // @deprecated (undocumented)
@@ -1282,6 +1230,7 @@ export class Editor extends EventEmitter<TLEventMap> {
     getSelectionRotatedPageBounds(): Box | undefined;
     getSelectionRotatedScreenBounds(): Box | undefined;
     getSelectionRotation(): number;
+    getSelectionScreenBounds(): Box | undefined;
     getShape<T extends TLShape = TLShape>(shape: TLParentId | TLShape): T | undefined;
     getShapeAncestors(shape: TLShape | TLShapeId, acc?: TLShape[]): TLShape[];
     getShapeAndDescendantIds(ids: TLShapeId[]): Set<TLShapeId>;
@@ -1303,7 +1252,6 @@ export class Editor extends EventEmitter<TLEventMap> {
     // @internal
     getShapeNearestSibling(siblingShape: TLShape, targetShape: TLShape | undefined): TLShape | undefined;
     getShapePageBounds(shape: TLShape | TLShapeId): Box | undefined;
-    getShapePageGeometry<T extends Geometry2d>(shape: TLShape | TLShapeId, opts?: TLGeometryOpts): T;
     getShapePageTransform(shape: TLShape | TLShapeId): Mat;
     getShapeParent(shape?: TLShape | TLShapeId): TLShape | undefined;
     getShapeParentTransform(shape: TLShape | TLShapeId): Mat;
@@ -1408,9 +1356,7 @@ export class Editor extends EventEmitter<TLEventMap> {
     isShapeOfType<T extends TLUnknownShape>(shape: TLUnknownShape, type: T['type']): shape is T;
     // (undocumented)
     isShapeOfType<T extends TLUnknownShape>(shapeId: TLUnknownShape['id'], type: T['type']): shapeId is T['id'];
-    isShapeOrAncestorLocked(shape?: TLShape): boolean;
-    // (undocumented)
-    isShapeOrAncestorLocked(id?: TLShapeId): boolean;
+    isShapeOrAncestorLocked(shape?: TLShape | TLShapeId): boolean;
     loadSnapshot(snapshot: Partial<TLEditorSnapshot> | TLStoreSnapshot, opts?: TLLoadSnapshotOptions): this;
     // @deprecated
     mark(markId?: string): this;
@@ -1454,6 +1400,7 @@ export class Editor extends EventEmitter<TLEventMap> {
     }> : TLExternalContent<E>) => void) | null): this;
     renamePage(page: TLPage | TLPageId, name: string): this;
     reparentShapes(shapes: TLShape[] | TLShapeId[], parentId: TLParentId, insertIndex?: IndexKey): this;
+    replaceExternalContent<E>(info: TLExternalContent<E>): Promise<void>;
     resetZoom(point?: Vec, opts?: TLCameraMoveOptions): this;
     resizeShape(shape: TLShape | TLShapeId, scale: VecLike, opts?: TLResizeShapeOptions): this;
     // (undocumented)
@@ -1608,8 +1555,6 @@ export class Ellipse2d extends Geometry2d {
     // (undocumented)
     get edges(): Edge2d[];
     // (undocumented)
-    _edges?: Edge2d[];
-    // (undocumented)
     getBounds(): Box;
     // (undocumented)
     getLength(): number;
@@ -1618,13 +1563,9 @@ export class Ellipse2d extends Geometry2d {
     // (undocumented)
     getVertices(): any[];
     // (undocumented)
-    h: number;
-    // (undocumented)
     hitTestLineSegment(A: VecLike, B: VecLike): boolean;
     // (undocumented)
     nearestPoint(A: VecLike): Vec;
-    // (undocumented)
-    w: number;
 }
 
 // @public (undocumented)
@@ -1803,11 +1744,11 @@ export function getIncrementedName(name: string, others: string[]): string;
 // @public (undocumented)
 export function getPerfectDashProps(totalLength: number, strokeWidth: number, opts?: {
     closed?: boolean;
-    end?: 'none' | 'outset' | 'skip';
+    end?: PerfectDashTerminal;
     forceSolid?: boolean;
     lengthRatio?: number;
     snap?: number;
-    start?: 'none' | 'outset' | 'skip';
+    start?: PerfectDashTerminal;
     style?: TLDefaultDashStyle;
 }): {
     strokeDasharray: string;
@@ -1914,6 +1855,10 @@ export class Group2d extends Geometry2d {
 export class GroupShapeUtil extends ShapeUtil<TLGroupShape> {
     // (undocumented)
     canBind(): boolean;
+    // (undocumented)
+    canResize(): boolean;
+    // (undocumented)
+    canResizeChildren(): boolean;
     // (undocumented)
     component(shape: TLGroupShape): JSX_2.Element | null;
     // (undocumented)
@@ -2320,6 +2265,9 @@ export type OptionalKeys<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>
 // @public
 export function parseDeepLinkString(deepLinkString: string): TLDeepLink;
 
+// @public (undocumented)
+export type PerfectDashTerminal = 'none' | 'outset' | 'skip';
+
 // @public
 export function perimeterOfEllipse(rx: number, ry: number): number;
 
@@ -2343,8 +2291,6 @@ export class Point2d extends Geometry2d {
     hitTestLineSegment(A: VecLike, B: VecLike, margin: number): boolean;
     // (undocumented)
     nearestPoint(): Vec;
-    // (undocumented)
-    point: Vec;
 }
 
 // @public
@@ -2389,11 +2335,7 @@ export class Polyline2d extends Geometry2d {
     // (undocumented)
     nearestPoint(A: VecLike): Vec;
     // (undocumented)
-    points: Vec[];
-    // (undocumented)
-    get segments(): Edge2d[];
-    // (undocumented)
-    _segments?: Edge2d[];
+    protected get segments(): Edge2d[];
 }
 
 // @public (undocumented)
@@ -2443,14 +2385,6 @@ export class Rectangle2d extends Polygon2d {
     getBounds(): Box;
     // (undocumented)
     getSvgPathData(): string;
-    // (undocumented)
-    h: number;
-    // (undocumented)
-    w: number;
-    // (undocumented)
-    x: number;
-    // (undocumented)
-    y: number;
 }
 
 // @public (undocumented)
@@ -2602,6 +2536,7 @@ export abstract class ShapeUtil<Shape extends TLUnknownShape = TLUnknownShape> {
     canEditInReadonly(_shape: Shape): boolean;
     canReceiveNewChildrenOfType(_shape: Shape, _type: TLShape['type']): boolean;
     canResize(_shape: Shape): boolean;
+    canResizeChildren(_shape: Shape): boolean;
     canScroll(_shape: Shape): boolean;
     canSnap(_shape: Shape): boolean;
     canTabTo(_shape: Shape): boolean;
@@ -2734,18 +2669,10 @@ export class Stadium2d extends Geometry2d {
         width: number;
     });
     // (undocumented)
-    a: Arc2d;
-    // (undocumented)
-    b: Edge2d;
-    // (undocumented)
-    c: Arc2d;
-    // (undocumented)
     config: Omit<Geometry2dOptions, 'isClosed'> & {
         height: number;
         width: number;
     };
-    // (undocumented)
-    d: Edge2d;
     // (undocumented)
     getBounds(): Box;
     // (undocumented)
@@ -2755,13 +2682,9 @@ export class Stadium2d extends Geometry2d {
     // (undocumented)
     getVertices(): Vec[];
     // (undocumented)
-    h: number;
-    // (undocumented)
     hitTestLineSegment(A: VecLike, B: VecLike): boolean;
     // (undocumented)
     nearestPoint(A: VecLike): Vec;
-    // (undocumented)
-    w: number;
 }
 
 // @public (undocumented)
@@ -2777,7 +2700,7 @@ export abstract class StateNode implements Partial<TLEventHandlers> {
     // (undocumented)
     enter(info: any, from: string): void;
     // (undocumented)
-    exit(info: any, from: string): void;
+    exit(info: any, to: string): void;
     getCurrent(): StateNode | undefined;
     // (undocumented)
     getCurrentToolIdMask(): string | undefined;
@@ -2905,6 +2828,8 @@ export type TestEnvironment = 'development' | 'production';
 export class TextManager {
     constructor(editor: Editor);
     // (undocumented)
+    dispose(): void;
+    // (undocumented)
     editor: Editor;
     measureElementTextNodeSpans(element: HTMLElement, { shouldTruncateToFirstLine }?: {
         shouldTruncateToFirstLine?: boolean;
@@ -2916,32 +2841,11 @@ export class TextManager {
         }[];
     };
     // (undocumented)
-    measureHtml(html: string, opts: {
-        maxWidth: null | number;
-        disableOverflowWrapBreaking?: boolean;
-        fontFamily: string;
-        fontSize: number;
-        fontStyle: string;
-        fontWeight: string;
-        lineHeight: number;
-        minWidth?: null | number;
-        otherStyles?: Record<string, string>;
-        padding: string;
-    }): BoxModel & {
+    measureHtml(html: string, opts: TLMeasureTextOpts): BoxModel & {
         scrollWidth: number;
     };
     // (undocumented)
-    measureText(textToMeasure: string, opts: {
-        maxWidth: null | number;
-        disableOverflowWrapBreaking?: boolean;
-        fontFamily: string;
-        fontSize: number;
-        fontStyle: string;
-        fontWeight: string;
-        lineHeight: number;
-        minWidth?: null | number;
-        padding: string;
-    }): BoxModel & {
+    measureText(textToMeasure: string, opts: TLMeasureTextOpts): BoxModel & {
         scrollWidth: number;
     };
     measureTextSpans(textToMeasure: string, opts: TLMeasureTextSpanOpts): {
@@ -3593,7 +3497,7 @@ export type TLExportType = 'jpeg' | 'png' | 'svg' | 'webp';
 export type TLExternalAsset = TLFileExternalAsset | TLUrlExternalAsset;
 
 // @public (undocumented)
-export type TLExternalContent<EmbedDefinition> = TLEmbedExternalContent<EmbedDefinition> | TLExcalidrawExternalContent | TLFilesExternalContent | TLSvgTextExternalContent | TLTextExternalContent | TLTldrawExternalContent | TLUrlExternalContent;
+export type TLExternalContent<EmbedDefinition> = TLEmbedExternalContent<EmbedDefinition> | TLExcalidrawExternalContent | TLFileReplaceExternalContent | TLFilesExternalContent | TLSvgTextExternalContent | TLTextExternalContent | TLTldrawExternalContent | TLUrlExternalContent;
 
 // @public (undocumented)
 export type TLExternalContentSource = TLErrorExternalContentSource | TLExcalidrawExternalContentSource | TLTextExternalContentSource | TLTldrawExternalContentSource;
@@ -3609,11 +3513,23 @@ export interface TLFileExternalAsset {
 }
 
 // @public (undocumented)
+export interface TLFileReplaceExternalContent extends TLBaseExternalContent {
+    // (undocumented)
+    file: File;
+    // (undocumented)
+    isImage: boolean;
+    // (undocumented)
+    shapeId: TLShapeId;
+    // (undocumented)
+    type: 'file-replace';
+}
+
+// @public (undocumented)
 export interface TLFilesExternalContent extends TLBaseExternalContent {
     // (undocumented)
     files: File[];
     // (undocumented)
-    ignoreParent: boolean;
+    ignoreParent?: boolean;
     // (undocumented)
     type: 'files';
 }
@@ -3754,6 +3670,31 @@ export interface TLLoadSnapshotOptions {
 }
 
 // @public (undocumented)
+export interface TLMeasureTextOpts {
+    // (undocumented)
+    disableOverflowWrapBreaking?: boolean;
+    // (undocumented)
+    fontFamily: string;
+    // (undocumented)
+    fontSize: number;
+    // (undocumented)
+    fontStyle: string;
+    // (undocumented)
+    fontWeight: string;
+    // (undocumented)
+    lineHeight: number;
+    maxWidth: null | number;
+    // (undocumented)
+    measureScrollWidth?: boolean;
+    // (undocumented)
+    minWidth?: null | number;
+    // (undocumented)
+    otherStyles?: Record<string, string>;
+    // (undocumented)
+    padding: string;
+}
+
+// @public (undocumented)
 export interface TLMeasureTextSpanOpts {
     // (undocumented)
     fontFamily: string;
@@ -3767,6 +3708,8 @@ export interface TLMeasureTextSpanOpts {
     height: number;
     // (undocumented)
     lineHeight: number;
+    // (undocumented)
+    measureScrollWidth?: boolean;
     // (undocumented)
     otherStyles?: Record<string, string>;
     // (undocumented)
@@ -4632,7 +4575,7 @@ export class Vec {
     static Neg(A: VecLike): Vec;
     // (undocumented)
     neg(): this;
-    // (undocumented)
+    // @deprecated (undocumented)
     norm(): this;
     // (undocumented)
     static Nudge(A: VecLike, B: VecLike, distance: number): Vec;
@@ -4702,7 +4645,7 @@ export class Vec {
     // (undocumented)
     static ToFixed(A: VecLike): Vec;
     // (undocumented)
-    toFixed(): Vec;
+    toFixed(): this;
     // (undocumented)
     static ToInt(A: VecLike): Vec;
     // (undocumented)
@@ -4719,7 +4662,7 @@ export class Vec {
     toString(): string;
     static Uni(A: VecLike): Vec;
     // (undocumented)
-    uni(): Vec;
+    uni(): this;
     // (undocumented)
     x: number;
     // (undocumented)

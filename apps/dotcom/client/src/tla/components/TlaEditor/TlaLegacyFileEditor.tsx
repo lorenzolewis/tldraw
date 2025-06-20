@@ -1,3 +1,4 @@
+import { useAuth } from '@clerk/clerk-react'
 import { ROOM_OPEN_MODE, RoomOpenMode, RoomOpenModeToPath } from '@tldraw/dotcom-shared'
 import { useSync } from '@tldraw/sync'
 import { useCallback, useMemo } from 'react'
@@ -13,13 +14,14 @@ import { globalEditor } from '../../../utils/globalEditor'
 import { multiplayerAssetStore } from '../../../utils/multiplayerAssetStore'
 import { useMaybeApp } from '../../hooks/useAppState'
 import { ReadyWrapper, useSetIsReady } from '../../hooks/useIsReady'
-import { SneakyDarkModeSync } from './SneakyDarkModeSync'
 import { TlaEditorWrapper } from './TlaEditorWrapper'
 import { TlaEditorErrorFallback } from './editor-components/TlaEditorErrorFallback'
 import { TlaEditorLegacySharePanel } from './editor-components/TlaEditorLegacySharePanel'
 import { TlaEditorMenuPanel } from './editor-components/TlaEditorMenuPanel'
 import { TlaEditorTopPanel } from './editor-components/TlaEditorTopPanel'
+import { SneakyDarkModeSync } from './sneaky/SneakyDarkModeSync'
 import { SneakyTldrawFileDropHandler } from './sneaky/SneakyFileDropHandler'
+import { SneakyLegacyModal } from './sneaky/SneakyLegacyModal'
 import { SneakyLegacySetDocumentTitle } from './sneaky/SneakyLegacytSetDocumentTitle'
 import { SneakySetDocumentTitle } from './sneaky/SneakySetDocumentTitle'
 import { useFileEditorOverrides } from './useFileEditorOverrides'
@@ -30,6 +32,8 @@ export const components: TLComponents = {
 	MenuPanel: TlaEditorMenuPanel,
 	SharePanel: TlaEditorLegacySharePanel,
 	TopPanel: TlaEditorTopPanel,
+	Dialogs: null,
+	Toasts: null,
 }
 
 export function TlaLegacyFileEditor({
@@ -57,6 +61,7 @@ function TlaEditorInner({
 	fileSlug: string
 }) {
 	const app = useMaybeApp()
+	const auth = useAuth()
 
 	const setIsReady = useSetIsReady()
 
@@ -114,6 +119,7 @@ function TlaEditorInner({
 				<ThemeUpdater />
 				<SneakyDarkModeSync />
 				<SneakyLegacySetDocumentTitle />
+				{roomOpenMode === 'read-write' && !auth.isSignedIn && <SneakyLegacyModal />}
 				{app && <SneakyTldrawFileDropHandler />}
 			</Tldraw>
 		</TlaEditorWrapper>

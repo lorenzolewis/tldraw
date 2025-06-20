@@ -1482,6 +1482,8 @@ export interface TLShapeCrop {
     // (undocumented)
     bottomRight: VecModel;
     // (undocumented)
+    isCircle?: boolean;
+    // (undocumented)
     topLeft: VecModel;
 }
 
@@ -1568,6 +1570,8 @@ export interface TLVideoShapeProps {
     altText: string;
     // (undocumented)
     assetId: null | TLAssetId;
+    // (undocumented)
+    autoplay: boolean;
     // (undocumented)
     h: number;
     // (undocumented)

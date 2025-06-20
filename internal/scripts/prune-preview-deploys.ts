@@ -19,6 +19,11 @@ interface ListWorkersResult {
 	result: { id: string }[]
 }
 
+interface ListQueuesResult {
+	success: boolean
+	result: { queue_id: string; queue_name: string; consumers: { consumer_id: string }[] }[]
+}
+
 const _isPrClosedCache = new Map<number, boolean>()
 async function isPrClosedForAWhile(prNumber: number) {
 	if (_isPrClosedCache.has(prNumber)) {
@@ -39,63 +44,97 @@ async function isPrClosedForAWhile(prNumber: number) {
 		}
 		throw err
 	}
-	const twoDays = 1000 * 60 * 60 * 24 * 2
+	const timeout = 1000 * 60 * 60 * 24 * 2 // two days
 	const result =
 		prResult.data.state === 'closed' &&
-		Date.now() - new Date(prResult.data.closed_at!).getTime() > twoDays
+		Date.now() - new Date(prResult.data.closed_at!).getTime() > timeout
 	_isPrClosedCache.set(prNumber, result)
 	return result
 }
 
 const CLOUDFLARE_WORKER_REGEX = /^pr-(\d+)-/
-async function listPreviewWorkerDeployments() {
-	const res = await fetch(
-		`https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/workers/scripts`,
-		{
-			headers: {
-				Authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}`,
-				'Content-Type': 'application/json',
-			},
-		}
-	)
+const CLOUDFLARE_SYNC_WORKER_REGEX = /^pr-\d+-tldraw-multiplayer$/
 
-	const data = (await res.json()) as ListWorkersResult
-
-	if (!data.success) {
-		throw new Error('Failed to list workers ' + JSON.stringify(data))
-	}
-
-	return data.result.map((r) => r.id).filter((id) => id.match(CLOUDFLARE_WORKER_REGEX))
-}
-
-async function deletePreviewWorkerDeployment(id: string) {
-	const url = `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/workers/scripts/${id}`
-	nicelog('DELETE', url)
-	const res = await fetch(url, {
-		method: 'DELETE',
+async function cloudflareApi(endpoint: string, options: RequestInit = {}): Promise<Response> {
+	const url = `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}${endpoint}`
+	return fetch(url, {
+		...options,
 		headers: {
 			Authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}`,
 			'Content-Type': 'application/json',
 		},
 	})
-	nicelog('status', res.status)
+}
+
+async function listPreviewWorkerDeployments() {
+	const res = await cloudflareApi('/workers/scripts')
+	const data = (await res.json()) as ListWorkersResult
+	if (!data.success) {
+		throw new Error('Failed to list workers ' + JSON.stringify(data))
+	}
+	return (
+		data.result
+			.map((r) => r.id)
+			.filter((id) => id.match(CLOUDFLARE_WORKER_REGEX))
+			// We want to delete the image optimizers first since they have a service binding to the main workers
+			.sort((a, b) => {
+				if (a.includes('image-optimizer')) return -1
+				if (b.includes('image-optimizer')) return 1
+				return 0
+			})
+	)
+}
+
+async function deleteQueue(id: string) {
+	await cloudflareApi(`/queues/${id}`, { method: 'DELETE' })
+}
+
+async function deleteQueueConsumer({ id, consumerId }: { id: string; consumerId: string }) {
+	await cloudflareApi(`/queues/${id}/consumers/${consumerId}`, { method: 'DELETE' })
+}
+
+async function deletePreviewWorker(id: string) {
+	const endpoint = `/workers/scripts/${id}`
+	nicelog(
+		'DELETE',
+		`https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}${endpoint}`
+	)
+	const res = await cloudflareApi(endpoint, { method: 'DELETE' })
 
 	if (!res.ok) {
 		throw new Error('Failed to delete worker ' + JSON.stringify(await res.json()))
 	}
+}
 
-	const queueUrl = `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/queues/tldraw-multiplayer-queue-${id}`
-	const queueRes = await fetch(queueUrl, {
-		method: 'DELETE',
-		headers: {
-			Authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}`,
-			'Content-Type': 'application/json',
-		},
-	})
-	if (!queueRes.ok) {
-		// This might happen for old PRs that didn't have queues yet
-		console.log('Failed to delete queue ' + JSON.stringify(await queueRes.json()))
+async function deletePreviewWorkerDeployment(id: string) {
+	// We want to delete the queue consumer and the queue only once. We'll do it just before we delete the worker
+	if (id.match(CLOUDFLARE_SYNC_WORKER_REGEX)) {
+		const prNumber = Number(id.match(CLOUDFLARE_WORKER_REGEX)?.[1])
+		const queueName = `tldraw-multiplayer-queue-pr-${prNumber}`
+		const queueInfo = queuesMap.get(queueName)
+		if (queueInfo) {
+			const { id, consumerId } = queueInfo
+			if (consumerId) {
+				await deleteQueueConsumer({ id, consumerId })
+			}
+			await deleteQueue(id)
+		}
 	}
+	await deletePreviewWorker(id)
+}
+
+const queuesMap = new Map<string, { id: string; consumerId: string | undefined }>()
+
+async function getQueues() {
+	const res = await cloudflareApi('/queues')
+	const data = (await res.json()) as ListQueuesResult
+	if (!data.success) {
+		throw new Error('Failed to get queues ' + JSON.stringify(data))
+	}
+	data.result.forEach((queue) => {
+		const { queue_id: id, queue_name: name, consumers } = queue
+		queuesMap.set(name, { id, consumerId: consumers[0]?.consumer_id })
+	})
 }
 
 const neonHeaders = {
@@ -197,7 +236,11 @@ async function deleteSstPreviewApp(stage: string) {
 	await exec('yarn', ['sst', 'remove', '--stage', stage])
 }
 
+const deletionErrors: string[] = []
+
 async function main() {
+	nicelog('Getting queues information')
+	await getQueues()
 	nicelog('Pruning preview deployments')
 	await processItems(listPreviewWorkerDeployments, deletePreviewWorkerDeployment)
 	nicelog('\nPruning preview databases')
@@ -207,6 +250,13 @@ async function main() {
 	nicelog('\nPruning sst preview stages')
 	await processItems(listAmazonClusters, deleteSstPreviewApp)
 	nicelog('\nDone')
+	if (deletionErrors.length > 0) {
+		nicelog('\nDeletion errors:')
+		for (const error of deletionErrors) {
+			nicelog(error)
+		}
+		process.exit(1)
+	}
 }
 
 async function processItems(
@@ -222,7 +272,11 @@ async function processItems(
 		}
 		if (await isPrClosedForAWhile(number)) {
 			nicelog(`Deleting ${item} because PR is closed`)
-			await deleteFn(item)
+			try {
+				await deleteFn(item)
+			} catch (err) {
+				deletionErrors.push(`${item}: ${err}`)
+			}
 		} else {
 			nicelog(`Skipping ${item} because PR is still open`)
 		}

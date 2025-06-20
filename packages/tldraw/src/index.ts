@@ -1,6 +1,25 @@
 /// <reference types="react" />
 
 import { registerTldrawLibraryVersion } from '@tldraw/editor'
+export {
+	PathBuilder,
+	PathBuilderGeometry2d,
+	type BasePathBuilderOpts,
+	type CubicBezierToPathBuilderCommand,
+	type DashedPathBuilderOpts,
+	type DrawPathBuilderDOpts,
+	type DrawPathBuilderOpts,
+	type LineToPathBuilderCommand,
+	type MoveToPathBuilderCommand,
+	type PathBuilderCommand,
+	type PathBuilderCommandBase,
+	type PathBuilderCommandInfo,
+	type PathBuilderCommandOpts,
+	type PathBuilderLineOpts,
+	type PathBuilderOpts,
+	type PathBuilderToDOpts,
+	type SolidPathBuilderOpts,
+} from './lib/shapes/shared/PathBuilder'
 export { usePrefersReducedMotion } from './lib/shapes/shared/usePrefersReducedMotion'
 export { DefaultA11yAnnouncer, useSelectedShapesAnnouncer } from './lib/ui/components/A11y'
 export { ColorSchemeMenu } from './lib/ui/components/ColorSchemeMenu'
@@ -125,9 +144,12 @@ export {
 	type RichTextSVGProps,
 } from './lib/shapes/shared/RichTextLabel'
 export {
+	ASPECT_RATIO_OPTIONS,
+	ASPECT_RATIO_TO_VALUE,
 	getCropBox,
 	getDefaultCrop,
 	getUncroppedSize,
+	type ASPECT_RATIO_OPTION,
 	type CropBoxOptions,
 } from './lib/shapes/shared/crop'
 export {
@@ -156,7 +178,7 @@ export { PlainTextArea } from './lib/shapes/text/PlainTextArea'
 export { RichTextArea, type TextAreaProps } from './lib/shapes/text/RichTextArea'
 export { TextShapeTool } from './lib/shapes/text/TextShapeTool'
 export { TextShapeUtil, type TextShapeOptions } from './lib/shapes/text/TextShapeUtil'
-export { VideoShapeUtil } from './lib/shapes/video/VideoShapeUtil'
+export { VideoShapeUtil, type VideoShapeOptions } from './lib/shapes/video/VideoShapeUtil'
 export { type StyleValuesForUi } from './lib/styles'
 export { EraserTool } from './lib/tools/EraserTool/EraserTool'
 export { HandTool } from './lib/tools/HandTool/HandTool'
@@ -270,6 +292,14 @@ export {
 	type ThemeStylePickerSetProps,
 } from './lib/ui/components/StylePanel/DefaultStylePanelContent'
 export {
+	DefaultImageToolbar,
+	type TLUiImageToolbarProps,
+} from './lib/ui/components/Toolbar/DefaultImageToolbar'
+export {
+	DefaultImageToolbarContent,
+	type DefaultImageToolbarContentProps,
+} from './lib/ui/components/Toolbar/DefaultImageToolbarContent'
+export {
 	DefaultRichTextToolbar,
 	type TLUiRichTextToolbarProps,
 } from './lib/ui/components/Toolbar/DefaultRichTextToolbar'
@@ -315,6 +345,14 @@ export {
 	useIsToolSelected,
 	type ToolbarItemProps,
 } from './lib/ui/components/Toolbar/DefaultToolbarContent'
+export {
+	DefaultVideoToolbar,
+	type TLUiVideoToolbarProps,
+} from './lib/ui/components/Toolbar/DefaultVideoToolbar'
+export {
+	DefaultVideoToolbarContent,
+	type DefaultVideoToolbarContentProps,
+} from './lib/ui/components/Toolbar/DefaultVideoToolbarContent'
 export {
 	OverflowingToolbar,
 	type OverflowingToolbarProps,
